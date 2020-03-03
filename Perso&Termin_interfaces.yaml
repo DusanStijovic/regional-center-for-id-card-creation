@@ -1,0 +1,345 @@
+openapi: 3.0.0
+info:
+  title: Swagger Perso i Termin Veb Servisi
+  description: |
+    Dokumentovana predstava dva servisa (PersoCentar i TerminCentar), koje ce studenti pozivati i cije ce funkcionalnosti koristiti u svom projektu
+  termsOfService: http://swagger.io/terms/
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+- url: http://collabnet.netset.rs:8081
+  description: API Perso i Termin Centra
+tags:
+- name: persoCentar
+  description: Centar za kreiranje i obradu dokumenata
+- name: terminCentar
+  description: Centar za kontrolisanje dostupnosti sistema
+paths:
+  /persoCentar/submit:
+    post:
+      tags:
+      - persoCentar
+      summary: Slanje zahteva za kreiranje novog dokumenta
+      operationId: submitDocumentRequest
+      requestBody:
+        $ref: '#/components/requestBodies/DocumentRequest'
+      responses:
+        "201":
+          description: Zahtev poslat na obradu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentSubmitResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/DocumentSubmitResponse'
+        "400":
+          description: Los zahtev
+  /persoCentar/{dokumentId}:
+    get:
+      tags:
+      - persoCentar
+      summary: Dohvatanje dokumenta po njegovom id-u
+      description: Vraca se dokument sa zahtevanim id-jem
+      operationId: getDocumentById
+      parameters:
+      - name: dokumentId
+        in: path
+        description: id dokumenta koji se zahteva
+        required: true
+        style: simple
+        explode: false
+        schema:
+          maxLength: 12
+          minLength: 12
+          type: string
+          example: "161090000001"
+      responses:
+        "200":
+          description: Uspesno izvrsen zahtev za dohvatanjem dokumenta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+        "400":
+          description: Nevalidan id dokumenta
+        "404":
+          description: Dokument nije nadjen
+  /terminCentar/getAvailableTimeslots:
+    get:
+      tags:
+      - terminCentar
+      summary: Provera dostupnih termina
+      description: Lista dostupnih termina u kojima korisnik moze da posalje zahtev
+        za obradu dokumenta
+      operationId: getAvailableTermins
+      parameters:
+      - name: regionalniCentarId
+        in: path
+        description: id regionalnog centra (za studenta sa brojem indexa 109/2016)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          maxLength: 5
+          minLength: 5
+          type: string
+          example: "16109"
+      - name: dan
+        in: query
+        description: dan za koji se traze dostupni termini
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date
+          example: 2020-01-20
+      responses:
+        "200":
+          description: uspesna operacija
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Termins'
+  /terminCentar/checkTimeslotAvailability:
+    get:
+      tags:
+      - terminCentar
+      summary: Provera da li je zahtevani termin dostupan
+      operationId: checkTerminAvailability
+      parameters:
+      - name: regionalniCentarId
+        in: query
+        description: id regionalnog centra (za studenta sa brojem indexa 109/2016)
+        required: true
+        style: form
+        explode: true
+        schema:
+          maxLength: 5
+          minLength: 5
+          type: string
+          example: "16109"
+      - name: termin
+        in: query
+        description: Datum i vreme termina koji zelimo da proverimo
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      responses:
+        "200":
+          description: uspesna operacija
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TerminAvailableMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TerminAvailableMessage'
+        "400":
+          description: Nevalidan parametar
+components:
+  schemas:
+    Termins:
+      type: array
+      example:
+      - periodOd: 2020-01-20T13:50:00-07:00
+        periodDo: 2020-01-20T13:00:00-07:00
+      - periodOd: 2020-01-20T14:30:00-07:00
+        periodDo: 2020-01-20T14:40:00-07:00
+      - periodOd: 2020-01-20T15:35:00-07:00
+        periodDo: 2020-01-20T15:45:00-07:00
+      items:
+        $ref: '#/components/schemas/Termin'
+    Termin:
+      type: object
+      properties:
+        periodOd:
+          type: string
+          format: date-time
+        periodDo:
+          type: string
+          format: date-time
+    TerminAvailableMessage:
+      type: object
+      properties:
+        poruka:
+          type: string
+          example: Dostupan termin
+        dostupnost:
+          type: boolean
+    DocumentRequest:
+      required:
+      - JMBG
+      - bracnoStanje
+      - brojPrebivalista
+      - datumRodjenja
+      - id
+      - ime
+      - imeMajke
+      - imeOca
+      - nacionalnost
+      - opstinaPrebivalista
+      - pol
+      - prezime
+      - prezimeMajke
+      - prezimeOca
+      - profesija
+      - ulicaPrebivalista
+      type: object
+      properties:
+        id:
+          maxLength: 12
+          minLength: 12
+          type: string
+          example: "161090000001"
+        JMBG:
+          type: string
+          example: "0312987761012"
+        ime:
+          type: string
+          example: John
+        prezime:
+          type: string
+          example: Doe
+        imeMajke:
+          type: string
+          example: JaneSr
+        imeOca:
+          type: string
+          example: JohnSr
+        prezimeMajke:
+          type: string
+          example: Doe
+        prezimeOca:
+          type: string
+          example: Doe
+        pol:
+          type: string
+          example: muski
+        datumRodjenja:
+          type: string
+          format: date
+          example: 1996-03-13
+        nacionalnost:
+          type: string
+          example: srbin
+        profesija:
+          type: string
+          example: programer
+        bracnoStanje:
+          type: string
+          description: bracno stanje
+          enum:
+          - neozenjen/a
+          - ozenjen/udata
+          - razveden/a
+          - udovac/udovica
+        opstinaPrebivalista:
+          type: string
+          example: Beograd
+        ulicaPrebivalista:
+          type: string
+          example: Bana Ivanisa
+        brojPrebivalista:
+          type: string
+          example: 13a
+      xml:
+        name: DocumentRequest
+    DocumentSubmitResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "161090000001"
+      xml:
+        name: DocumentSubmitResponse
+    DocumentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "161090000001"
+        JMBG:
+          type: string
+          example: "0312987761012"
+        ime:
+          type: string
+          example: John
+        prezime:
+          type: string
+          example: Doe
+        imeMajke:
+          type: string
+          example: JaneSr
+        imeOca:
+          type: string
+          example: JohnSr
+        prezimeMajke:
+          type: string
+          example: Doe
+        prezimeOca:
+          type: string
+          example: Doe
+        pol:
+          type: string
+          example: muski
+        datumRodjenja:
+          type: string
+          format: date
+          example: 1996-03-13
+        nacionalnost:
+          type: string
+          example: srbin
+        profesija:
+          type: string
+          example: programer
+        bracnoStanje:
+          type: string
+          description: bracno stanje
+          enum:
+          - neozenjen/a
+          - ozenjen/udata
+          - razveden/a
+          - udovac/udovica
+        opstinaPrebivalista:
+          type: string
+          example: Beograd
+        ulicaPrebivalista:
+          type: string
+          example: Bana Ivanisa
+        brojPrebivalista:
+          type: string
+          example: 13a
+        status:
+          type: string
+          description: status
+          enum:
+          - kreiran
+          - uProdukciji
+          - cekaNaIzvrsenje
+          - urucen
+      xml:
+        name: DocumentResponse
+  requestBodies:
+    DocumentRequest:
+      description: DocumentRequest se salje u Perso Centar na obradu
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DocumentRequest'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/DocumentRequest'
+      required: true
+
+
+http://collabnet.netset.rs:8081/is/terminCentar/getAvailableTimeslots?regionalniCentarId=17145&dan=2020-02-04
