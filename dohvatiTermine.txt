@@ -1,0 +1,1 @@
+http://collabnet.netset.rs:8081/is/terminCentar/getAvailableTimeslots?regionalniCentarId=17145&dan=2020-02-04

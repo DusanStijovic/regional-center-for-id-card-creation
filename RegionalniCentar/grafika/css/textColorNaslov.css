@@ -1,0 +1,5 @@
+.label {
+    -fx-font-family: "Comic Sans MS";
+    -fx-text-fill: grey;
+    -fx-text-size:20;
+}
